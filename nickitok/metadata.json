@@ -1,0 +1,13 @@
+{
+  "name": "Nickitok",
+  "description": "Nickitok: A next-generation social platform for sharing thoughts, videos (Nix), and community moments.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "social",
+    "video",
+    "ai"
+  ]
+}

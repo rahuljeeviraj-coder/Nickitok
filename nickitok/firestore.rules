@@ -1,0 +1,157 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (auth.uid)
+    // Fields:
+    //   - id: string (required)
+    //   - username: string (required)
+    //   - nickName: string (required)
+    //   - bio: string (optional)
+    //   - profileIcons: list (required)
+    //   - followersCount: number (required)
+    //   - followingCount: number (required)
+    //
+    // Collection: posts
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - userHandle: string (required)
+    //   - userAvatar: string (required)
+    //   - type: string (required, enum)
+    //   - content: string (required)
+    //   - imageUrl: string (optional)
+    //   - videoUrl: string (optional)
+    //   - timestamp: string (required, ISO 8601)
+    //   - likes: number (required)
+    //   - comments: number (required)
+    //   - reposts: number (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.username is string && data.username.size() > 0 &&
+             data.nickName is string && data.nickName.size() > 0 &&
+             (data.get('bio', '') is string) &&
+             data.profileIcons is list &&
+             data.followersCount is number &&
+             data.followingCount is number;
+    }
+
+    function isValidPost(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.userHandle is string &&
+             data.userAvatar is string &&
+             data.type in ['thought', 'note', 'post', 'nick', 'video', 'app'] &&
+             data.content is string && data.content.size() <= 1000 &&
+             isValidDateString(data.timestamp) &&
+             data.likes is number &&
+             data.comments is number &&
+             data.reposts is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // PII Protection: Private profile if it contains email. 
+      // Current blueprint doesn't show email in users collection, but we keep it safe.
+      allow read: if isAuthenticated(); 
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) &&
+                    request.resource.data.id == resource.data.id; // Immutable ID
+    }
+
+    match /posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidPost(request.resource.data);
+      allow update: if isAuthenticated() && (
+        // Owner update (e.g. editing post - though logic currently only increments)
+        (isDocOwner() && isValidPost(request.resource.data)) ||
+        // Public interaction update (incrementing likes/comments/reposts)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'comments', 'reposts', 'saves', 'views']))
+      );
+      allow delete: if isDocOwner();
+    }
+
+    match /likes/{likeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /reposts/{repostId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                    request.resource.data.senderId == request.auth.uid &&
+                    request.resource.data.text is string && 
+                    request.resource.data.text.size() <= 500;
+    }
+
+    match /following/{followingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /saves/{saveId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.targetUserId);
+      allow create: if isAuthenticated();
+    }
+  }
+}

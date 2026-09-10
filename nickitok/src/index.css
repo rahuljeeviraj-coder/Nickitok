@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #E91E63;
+  --color-secondary: #2196F3;
+}
+
+body {
+  background-color: #f3f4f6;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.nick-container {
+  scroll-snap-type: y mandatory;
+}
+
+.nick-item {
+  scroll-snap-align: start;
+}

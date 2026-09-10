@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "nickName": { "type": "string" },
+        "bio": { "type": "string" },
+        "profileIcons": { "type": "array", "items": { "type": "string" } },
+        "followersCount": { "type": "number" },
+        "followingCount": { "type": "number" },
+        "dob": { "type": "string" }
+      },
+      "required": ["id", "username", "nickName"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "A post in the feed (thought, nick, video, etc.)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userHandle": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "type": { "type": "string", "enum": ["thought", "note", "post", "nick", "video", "app", "story", "highlight", "nick_profile", "tunes"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "appName": { "type": "string" },
+        "appIcon": { "type": "string" },
+        "appFileUrl": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "likes": { "type": "number" },
+        "dislikes": { "type": "number" },
+        "comments": { "type": "number" },
+        "reposts": { "type": "number" },
+        "saves": { "type": "number" },
+        "views": { "type": "number" },
+        "is18Plus": { "type": "boolean" },
+        "isPrivate": { "type": "boolean" },
+        "backgroundColor": { "type": "string" }
+      },
+      "required": ["id", "userId", "userHandle", "type", "timestamp"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A chat message",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "senderId", "senderName", "timestamp"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "A user notification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userHandle": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userHandle", "targetUserId", "content", "timestamp"]
+    },
+    "Save": {
+      "title": "Save",
+      "description": "A saved post",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "postId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "postId", "timestamp"]
+    },
+    "Following": {
+      "title": "Following",
+      "description": "A user following another user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "targetUserId", "timestamp"]
+    },
+    "Like": {
+      "title": "Like",
+      "description": "A user's like on a post",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "postId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "postId", "timestamp"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A user's comment on a post",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userHandle": { "type": "string" },
+        "userAvatar": { "type": "string" },
+        "postId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userHandle", "userAvatar", "postId", "text", "timestamp"]
+    },
+    "Repost": {
+      "title": "Repost",
+      "description": "A user's repost of a post",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "postId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "postId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data"
+    },
+    "/posts/{postId}": {
+      "schema": "Post",
+      "description": "Public and private posts"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Real-time community chat messages"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications"
+    },
+    "/saves/{saveId}": {
+      "schema": "Save",
+      "description": "User saved posts"
+    },
+    "/following/{followingId}": {
+      "schema": "Following",
+      "description": "User following relationships"
+    },
+    "/likes/{likeId}": {
+      "schema": "Like",
+      "description": "Individual likes for posts"
+    },
+    "/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Post comments"
+    },
+    "/reposts/{repostId}": {
+      "schema": "Repost",
+      "description": "Post reposts"
+    }
+  }
+}
