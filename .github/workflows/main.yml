@@ -1,0 +1,23 @@
+name: Build React App
+on:
+ push:
+ branches: [ main ]
+jobs:
+ build:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - name: Setup Node.js
+ uses: actions/setup-node@v4
+ with:
+ node-version: 18
+ - name: Install Dependencies
+ run: npm install
+ - name: Build Project
+ run: npm run build
+ - name: Upload Build Artifacts
+ uses: actions/upload-artifact@v4
+ with:
+ name: react-build
+ path: build/
+``` இந்தக் குறியீட்டை நகலெடுத்து, உங்களுடைய `main.yml` கோப்பில் ஒட்டுங்கள். பின்னர், கீழே உள்ள "Commit changes" பொத்தானை அழுத்தி மாற்றங்களைச்
